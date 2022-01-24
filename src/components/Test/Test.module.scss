@@ -1,0 +1,13 @@
+.test {
+  &_title {
+    color: red;
+
+    &_count {
+      color: green;
+
+      &_name {
+        color: blue;
+      }
+    }
+  }
+}
