@@ -1,13 +1,8 @@
 import React from 'react';
-import { Test } from './components/Test/Test';
+import Layout from './components/Layout/Layout';
 
 function App() {
-  return (
-    <>
-      <h1>Hello</h1>
-      <Test name='Slava' count={0} title='NEW Title'/>
-    </>
-  );
+  return <Layout />;
 }
 
 export default App;
