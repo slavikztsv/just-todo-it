@@ -1,0 +1,10 @@
+@use "sass:meta";
+@use "sass:string";
+
+@mixin variable-exporter($args...) {
+  @each $key, $value in meta.keywords($args) {
+    :export{
+      #{str-slice($key, 1)}: $value;
+    }
+  }
+};

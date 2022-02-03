@@ -1,4 +1,6 @@
+@use '../../styles/_colors.module.scss' as *;
+
 .sidenav {
   height: 100%;
-  background-color: rgb(255, 146, 146);
+  background-color: $primary-color;
 }
