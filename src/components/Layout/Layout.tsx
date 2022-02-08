@@ -1,4 +1,5 @@
 import { Grid, ThemeProvider } from "@mui/material";
+import { Outlet } from "react-router-dom";
 import theme from "../../styles/materialTheme";
 import Footer from "../Footer/Footer";
 import Header from "../Header/Header";
@@ -22,7 +23,7 @@ const Layout = () => {
             <Sidenav />
           </Grid>
           <Grid item xs={90}>
-            <span>CONTENT</span>
+            <Outlet />
           </Grid>
         </Grid>
         <Grid item xs={10}>
