@@ -1,5 +1,5 @@
 import { Button, Grid, TextField } from "@mui/material";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { BOARDS_API } from "../../helpers/constants";
 import { IBoard } from "../../models/interfaces/Board.interface";
 import HttpService from "../../services/HttpService";
@@ -16,12 +16,13 @@ const BoardList = () => {
     (async () => {
       const response = await HttpService.getAll<IBoard>(BOARDS_API);
       setBoardList(response.data);
+      setFormValue((prevState) => ({ ...prevState, id: response.data[0].id }));
     })();
   }, []);
 
-  const submitHandler = (event: any) => {
+  const submitHandler = (event: FormEvent) => {
     event.preventDefault();
-    console.log(event);
+    console.log(formValue);
   };
 
   const InputHandler = (
