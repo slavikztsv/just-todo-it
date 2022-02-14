@@ -1,0 +1,13 @@
+.border_list {
+  height: 100%;
+  overflow: hidden;
+
+  &_items {
+    overflow: auto;
+    padding: 1rem;
+  }
+
+  &_actions {
+    padding: 1rem;
+  }
+}
