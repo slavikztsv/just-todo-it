@@ -1,7 +1,7 @@
 import { ITask } from "./Task.interface";
 
-export interface IList {
+export interface ITaskList {
   id: string;
   name: string;
-  tasks: ITask[];
+  boardId: string;
 }

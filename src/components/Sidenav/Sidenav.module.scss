@@ -1,6 +1,10 @@
-@use '../../styles/_colors.module.scss' as *;
+@use "../../styles/_colors.module.scss" as *;
 
 .sidenav {
   height: 100%;
   background-color: $primary-color;
+
+  &_nav_item {
+    cursor: pointer;
+  }
 }

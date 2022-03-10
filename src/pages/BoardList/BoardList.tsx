@@ -3,17 +3,19 @@ import { Button, Grid, TextField } from "@mui/material";
 import { DevTool } from "@hookform/devtools";
 import { useForm } from "react-hook-form";
 
-import classes from "./BorderList.module.scss";
+import classes from "./BoardList.module.scss";
 import HttpService from "../../services/HttpService";
-import { BOARDS_API } from "../../helpers/constants";
 import { IBoard } from "../../models/interfaces/Board.interface";
-import Board from "../Board/Board";
+import { useNavigate } from "react-router-dom";
+import BoardListItem from "./BoardListItem/BoardListItem";
+import { routes } from "../../helpers/constants";
 
 interface IFormData {
   name: string;
 }
 
 const BoardList = () => {
+  const navigate = useNavigate();
   const [boardList, setBoardList] = useState<IBoard[]>([]);
 
   const {
@@ -26,8 +28,14 @@ const BoardList = () => {
 
   useEffect(() => {
     (async () => {
-      const response = await HttpService.getAll<IBoard>(BOARDS_API);
-      setBoardList(response.data);
+      try {
+        const response = await HttpService.getAll<IBoard>(
+          routes.getBoardsAPI()
+        );
+        setBoardList(response.data);
+      } catch (error) {
+        console.log(error);
+      }
     })();
   }, []);
 
@@ -35,12 +43,14 @@ const BoardList = () => {
     const board: IBoard = {
       ...formData,
       id: crypto.randomUUID(),
-      lists: [],
     };
 
     (async () => {
       try {
-        const response = await HttpService.create<IBoard>(BOARDS_API, board);
+        const response = await HttpService.create<IBoard>(
+          routes.getBoardsAPI(),
+          board
+        );
         setBoardList((prevState) => [...prevState, response.data]);
         reset();
       } catch (error) {
@@ -52,7 +62,11 @@ const BoardList = () => {
   const updateHandler = (id: string, data: Partial<IBoard>) => {
     (async () => {
       try {
-        const response = await HttpService.update<IBoard>(BOARDS_API, id, data);
+        const response = await HttpService.update<IBoard>(
+          routes.getBoardsAPI(),
+          id,
+          data
+        );
         setBoardList((prevState) => [
           ...prevState.map((item) =>
             item.id === id ? (item = response.data) : item
@@ -67,7 +81,7 @@ const BoardList = () => {
   const deleteHandler = (id: string) => {
     (async () => {
       try {
-        await HttpService.remove<IBoard>(BOARDS_API, id);
+        await HttpService.remove<IBoard>(routes.getBoardsAPI(), id);
         setBoardList((prevState) => [
           ...prevState.filter((item) => item.id !== id),
         ]);
@@ -77,30 +91,41 @@ const BoardList = () => {
     })();
   };
 
+  const boardClickHandler = (clickedBoardId: string) => {
+    navigate(routes.getBoardsAPI(clickedBoardId));
+  };
+
   return (
-    <Grid container direction={"column"} className={classes.border_list}>
+    <Grid container direction={"column"} className={classes.board_list}>
       <Grid
         container
         item
         gap="1rem"
-        className={classes.border_list_items}
+        className={classes.board_list_items}
         xs={80}
       >
         {boardList.map((item) => (
-          <Board
+          <BoardListItem
             key={item.id}
             id={item.id}
             name={item.name}
             onDeleteClick={deleteHandler}
             onUpdateClick={updateHandler}
+            onBoardClick={boardClickHandler}
           />
         ))}
       </Grid>
-      <Grid container item className={classes.border_list_actions}>
+      <Grid item className={classes.board_list_actions}>
         <form onSubmit={handleSubmit(submitHandler)}>
-          <TextField label="Name" variant="outlined" {...register("name")} />
-          {errors.name && <span>Name is required</span>}
-          <Button type="submit">Submit</Button>
+          <Grid item container>
+            <TextField
+              label="New Board Name"
+              variant="outlined"
+              {...register("name")}
+            />
+            {errors.name && <span>Name is required</span>}
+            <Button type="submit">Create</Button>
+          </Grid>
         </form>
       </Grid>
 
