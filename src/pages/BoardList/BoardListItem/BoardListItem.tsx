@@ -2,6 +2,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Grid,
   IconButton,
   TextField,
 } from "@mui/material";
@@ -31,12 +32,16 @@ const BoardListItem = (props: IProps) => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   return (
-    <Card sx={{ maxWidth: 345 }} onClick={() => props.onBoardClick(props.id)}>
+    <Card
+      variant="outlined"
+      sx={{ maxWidth: 345 }}
+      onClick={() => props.onBoardClick(props.id)}
+    >
       <CardHeader
         title={
           <>
             {isEditMode && (
-              <>
+              <Grid item container alignItems="center">
                 <TextField
                   {...register("name")}
                   defaultValue={props.name}
@@ -51,7 +56,7 @@ const BoardListItem = (props: IProps) => {
                 >
                   <EditOffRoundedIcon />
                 </IconButton>
-              </>
+              </Grid>
             )}
             {!isEditMode && (
               <>

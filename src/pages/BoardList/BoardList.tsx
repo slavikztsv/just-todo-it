@@ -96,7 +96,12 @@ const BoardList = () => {
   };
 
   return (
-    <Grid container direction={"column"} className={classes.board_list}>
+    <Grid
+      container
+      direction={"column"}
+      rowGap="1rem"
+      className={classes.board_list}
+    >
       <Grid
         container
         item
@@ -115,7 +120,7 @@ const BoardList = () => {
           />
         ))}
       </Grid>
-      <Grid item className={classes.board_list_actions}>
+      <Grid item>
         <form onSubmit={handleSubmit(submitHandler)}>
           <Grid item container>
             <TextField

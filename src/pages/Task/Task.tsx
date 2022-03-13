@@ -5,11 +5,13 @@ import { useForm } from "react-hook-form";
 import { routes } from "../../helpers/constants";
 import { initialValues, ITask } from "../../models/interfaces/Task.interface";
 import HttpService from "../../services/HttpService";
+import { ITaskList } from "../../models/interfaces/TaskList.interface";
 
 interface IProps {
-  id: string;
+  id?: string;
+  list: ITaskList;
   contextDataHandler: (taskName: string) => void;
-  onSave: () => void;
+  onChange: () => void;
 }
 
 interface IFormData {
@@ -19,17 +21,22 @@ interface IFormData {
   dueDate: Date;
 }
 
-const Task = ({ contextDataHandler, id, onSave }: IProps) => {
+const Task = ({ id, list, onChange, contextDataHandler }: IProps) => {
   const { register, handleSubmit, reset, setValue } = useForm<IFormData>();
   const [task, setTask] = useState<ITask>(initialValues);
 
   useEffect(() => {
     try {
       (async () => {
-        const response = await HttpService.get<ITask>(routes.getTasksAPI(), id);
-        reset(response.data);
-        setTask(response.data);
-        contextDataHandler(response.data.name);
+        if (id) {
+          const response = await HttpService.get<ITask>(
+            routes.getTasksAPI(),
+            id
+          );
+          reset(response.data);
+          setTask(response.data);
+          contextDataHandler(response.data.name);
+        }
       })();
     } catch (error) {
       console.log(error);
@@ -43,12 +50,31 @@ const Task = ({ contextDataHandler, id, onSave }: IProps) => {
     };
 
     (async () => {
-      await HttpService.update<ITask>(
-        routes.getTasksAPI(),
-        task.id,
-        taskRequest
-      );
-      onSave();
+      if (id) {
+        await HttpService.update<ITask>(
+          routes.getTasksAPI(),
+          task.id,
+          taskRequest
+        );
+      } else {
+        await HttpService.create<ITask>(routes.getTasksAPI(), {
+          ...taskRequest,
+          id: crypto.randomUUID(),
+          listId: list.id,
+        });
+      }
+      onChange();
+    })();
+  };
+
+  const onDeleteClick = () => {
+    (async () => {
+      try {
+        await HttpService.remove<ITask>(routes.getTasksAPI(), task.id);
+        onChange();
+      } catch (error) {
+        console.log(error);
+      }
     })();
   };
 
@@ -98,7 +124,10 @@ const Task = ({ contextDataHandler, id, onSave }: IProps) => {
             )}
           />
         </Grid>
-        <Button type="submit">SAVE</Button>
+        <Grid item container justifyContent="space-between">
+          <Button type="submit">SAVE</Button>
+          {id && <Button onClick={() => onDeleteClick()}>DELETE</Button>}
+        </Grid>
       </form>
     </Grid>
   );

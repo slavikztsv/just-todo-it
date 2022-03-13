@@ -102,7 +102,7 @@ const Board = () => {
         {lists.map((list) => (
           <Grid item key={list.id}>
             <TaskList
-              name={list.name}
+              list={list}
               tasks={tasks.filter((task) => task.listId === list.id)}
               onChange={() => fetchData()}
             />
