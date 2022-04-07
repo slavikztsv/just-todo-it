@@ -9,6 +9,13 @@ import { IBoard } from "../../models/interfaces/Board.interface";
 import { useNavigate } from "react-router-dom";
 import BoardListItem from "./BoardListItem/BoardListItem";
 import { routes } from "../../helpers/constants";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+  useAddBoardMutation,
+  useDeleteBoardMutation,
+  useGetBoardsQuery,
+  useUpdateBoardMutation,
+} from "../../store/api";
 
 interface IFormData {
   name: string;
@@ -16,7 +23,10 @@ interface IFormData {
 
 const BoardList = () => {
   const navigate = useNavigate();
-  const [boardList, setBoardList] = useState<IBoard[]>([]);
+  const { data, error, isLoading } = useGetBoardsQuery();
+  const [addBoard] = useAddBoardMutation();
+  const [updateBoard] = useUpdateBoardMutation();
+  const [deleteBoard] = useDeleteBoardMutation();
 
   const {
     register,
@@ -26,19 +36,6 @@ const BoardList = () => {
     control,
   } = useForm<IFormData>();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const response = await HttpService.getAll<IBoard>(
-          routes.getBoardsAPI()
-        );
-        setBoardList(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    })();
-  }, []);
-
   const submitHandler = (formData: IFormData) => {
     const board: IBoard = {
       ...formData,
@@ -46,48 +43,20 @@ const BoardList = () => {
     };
 
     (async () => {
-      try {
-        const response = await HttpService.create<IBoard>(
-          routes.getBoardsAPI(),
-          board
-        );
-        setBoardList((prevState) => [...prevState, response.data]);
-        reset();
-      } catch (error) {
-        console.log(error);
-      }
+      await addBoard(board);
+      reset();
     })();
   };
 
   const updateHandler = (id: string, data: Partial<IBoard>) => {
     (async () => {
-      try {
-        const response = await HttpService.update<IBoard>(
-          routes.getBoardsAPI(),
-          id,
-          data
-        );
-        setBoardList((prevState) => [
-          ...prevState.map((item) =>
-            item.id === id ? (item = response.data) : item
-          ),
-        ]);
-      } catch (error) {
-        console.log(error);
-      }
+      await updateBoard({ id, ...data });
     })();
   };
 
   const deleteHandler = (id: string) => {
     (async () => {
-      try {
-        await HttpService.remove<IBoard>(routes.getBoardsAPI(), id);
-        setBoardList((prevState) => [
-          ...prevState.filter((item) => item.id !== id),
-        ]);
-      } catch (error) {
-        console.log(error);
-      }
+      await deleteBoard(id);
     })();
   };
 
@@ -109,7 +78,7 @@ const BoardList = () => {
         className={classes.board_list_items}
         xs={80}
       >
-        {boardList.map((item) => (
+        {data?.map((item) => (
           <BoardListItem
             key={item.id}
             id={item.id}

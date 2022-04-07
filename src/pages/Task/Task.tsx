@@ -2,16 +2,22 @@ import { Button, Grid, TextField, TextFieldProps } from "@mui/material";
 import DatePicker from "@mui/lab/DatePicker";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { routes } from "../../helpers/constants";
-import { initialValues, ITask } from "../../models/interfaces/Task.interface";
-import HttpService from "../../services/HttpService";
 import { ITaskList } from "../../models/interfaces/TaskList.interface";
+import {
+  apiService,
+  useAddTaskMutation,
+  useDeleteTaskMutation,
+  useGetTaskByIdQuery,
+  useUpdateTaskMutation,
+} from "../../store/api";
+import { useAppDispatch } from "../../store/hooks";
+import { ITask } from "../../models/interfaces/Task.interface";
 
 interface IProps {
   id?: string;
   list: ITaskList;
   contextDataHandler: (taskName: string) => void;
-  onChange: () => void;
+  isChanged: () => void;
 }
 
 interface IFormData {
@@ -21,62 +27,37 @@ interface IFormData {
   dueDate: Date;
 }
 
-const Task = ({ id, list, onChange, contextDataHandler }: IProps) => {
+const Task = ({ id, list, isChanged, contextDataHandler }: IProps) => {
+  const dispatch = useAppDispatch();
+  const taskByIdQuery = useGetTaskByIdQuery(id as string, {
+    skip: id ? false : true,
+  });
+  const [addTask] = useAddTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
+  const [deleteTask] = useDeleteTaskMutation();
+
   const { register, handleSubmit, reset, setValue } = useForm<IFormData>();
-  const [task, setTask] = useState<ITask>(initialValues);
 
   useEffect(() => {
-    try {
-      (async () => {
-        if (id) {
-          const response = await HttpService.get<ITask>(
-            routes.getTasksAPI(),
-            id
-          );
-          reset(response.data);
-          setTask(response.data);
-          contextDataHandler(response.data.name);
-        }
-      })();
-    } catch (error) {
-      console.log(error);
-    }
-  }, [id, contextDataHandler, reset]);
+    reset(taskByIdQuery.data);
+  }, [reset, taskByIdQuery]);
 
   const submitHandler = (formData: IFormData) => {
-    const taskRequest: ITask = {
-      ...task,
-      ...formData,
-    };
-
     (async () => {
       if (id) {
-        await HttpService.update<ITask>(
-          routes.getTasksAPI(),
-          task.id,
-          taskRequest
-        );
+        await updateTask(formData);
       } else {
-        await HttpService.create<ITask>(routes.getTasksAPI(), {
-          ...taskRequest,
+        await addTask({
           id: crypto.randomUUID(),
           listId: list.id,
+          ...formData,
         });
       }
-      onChange();
+      isChanged();
     })();
   };
 
-  const onDeleteClick = () => {
-    (async () => {
-      try {
-        await HttpService.remove<ITask>(routes.getTasksAPI(), task.id);
-        onChange();
-      } catch (error) {
-        console.log(error);
-      }
-    })();
-  };
+  const onDeleteClick = () => (async () => await deleteTask(id as string))();
 
   return (
     <Grid container direction={"column"}>
@@ -107,15 +88,24 @@ const Task = ({ id, list, onChange, contextDataHandler }: IProps) => {
             openTo="day"
             views={["year", "month", "day"]}
             mask={"__/__/____"}
-            value={task.dueDate}
+            value={taskByIdQuery.data?.dueDate}
             onChange={(newValue: any) => {
-              setTask((prevState) => ({ ...prevState, dueDate: newValue }));
+              // const patchCollection = dispatch(
+              //   apiService.util.updateQueryData(
+              //     "getTaskById",
+              //     taskByIdQuery.data.id,
+              //     (draftTasks) => {
+              //       draftTasks.dueDate = newValue;
+              //     }
+              //   )
+              // );
               setValue("dueDate", newValue, {
                 shouldValidate: true,
                 shouldDirty: true,
               });
             }}
             renderInput={(params: TextFieldProps) => (
+              //TODO: Fix value not updating when setValue is executed
               <TextField
                 {...params}
                 {...register("dueDate")}

@@ -8,6 +8,20 @@ import { ITask } from "../../models/interfaces/Task.interface";
 import HttpService from "../../services/HttpService";
 import TaskList from "./TaskList/TaskList";
 import { useForm } from "react-hook-form";
+import {
+  useAddListMutation,
+  useDeleteListMutation,
+  useGetListsQuery,
+  useUpdateListMutation,
+  useGetTasksQuery,
+  useGetTaskByIdQuery,
+  useAddTaskMutation,
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
+  useGetTasksByBoardIdQuery,
+  useGetListsByBoardIdQuery,
+  useGetBoardByIdQuery,
+} from "../../store/api";
 
 type IParams = {
   boardId: string;
@@ -19,9 +33,16 @@ interface IFormData {
 
 const Board = () => {
   const { boardId } = useParams<IParams>();
-  const [selectedBoard, setSelectedBoard] = useState<IBoard>(initialValues);
-  const [lists, setLists] = useState<ITaskList[]>([]);
-  const [tasks, setTasks] = useState<ITask[]>([]);
+
+  const selectedBoard = useGetBoardByIdQuery(boardId as string);
+  const listsByBoardIdQuery = useGetListsByBoardIdQuery(boardId as string);
+  const [addList] = useAddListMutation();
+  // const [updateList] = useUpdateListMutation();
+  // const [deleteList] = useDeleteListMutation();
+
+  const taskByBoardIdQuery = useGetTasksByBoardIdQuery(boardId as string);
+
+  // const [selectedBoard, setSelectedBoard] = useState<IBoard>(initialValues);
 
   const {
     register,
@@ -30,31 +51,31 @@ const Board = () => {
     formState: { errors },
   } = useForm<IFormData>();
 
-  const fetchData = useCallback(() => {
-    (async () => {
-      try {
-        const selectedBoardResponse = await HttpService.get<IBoard>(
-          routes.getBoardsAPI(),
-          boardId as string
-        );
-        const listsResponse = await HttpService.getAll<ITaskList>(
-          routes.getListsAPI(boardId as string)
-        );
-        const tasksResponse = await HttpService.getAll<ITask>(
-          routes.getTasksAPI(boardId as string)
-        );
-        setSelectedBoard(selectedBoardResponse.data);
-        setLists(listsResponse.data);
-        setTasks(tasksResponse.data);
-      } catch (error) {
-        console.log(error);
-      }
-    })();
-  }, [boardId]);
+  // const fetchData = useCallback(() => {
+  //   (async () => {
+  //     try {
+  //       const selectedBoardResponse = await HttpService.get<IBoard>(
+  //         routes.getBoardsAPI(),
+  //         boardId as string
+  //       );
+  //       const listsResponse = await HttpService.getAll<ITaskList>(
+  //         routes.getListsAPI(boardId as string)
+  //       );
+  //       const tasksResponse = await HttpService.getAll<ITask>(
+  //         routes.getTasksAPI(boardId as string)
+  //       );
+  //       setSelectedBoard(selectedBoardResponse.data);
+  //       setLists(listsResponse.data);
+  //       setTasks(tasksResponse.data);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   })();
+  // }, [boardId]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // useEffect(() => {
+  //   fetchData();
+  // }, [fetchData]);
 
   const submitHandler = (formData: IFormData) => {
     const taskList: ITaskList = {
@@ -64,23 +85,14 @@ const Board = () => {
     };
 
     (async () => {
-      try {
-        const response = await HttpService.create<ITaskList>(
-          routes.getListsAPI(),
-          taskList
-        );
-        setLists((prevState) => [...prevState, response.data]);
-        reset();
-      } catch (error) {
-        console.log(error);
-      }
+      await addList(taskList);
     })();
   };
 
   return (
     <Grid container direction={"column"} spacing={"1rem"}>
       <Grid item>
-        <span>{`Board: ${selectedBoard?.name}`}</span>
+        <span>{`Board: ${selectedBoard.data?.name}`}</span>
       </Grid>
       <Grid item>
         <span>Lists</span>
@@ -99,15 +111,19 @@ const Board = () => {
         </form>
       </Grid>
       <Grid container item direction={"row"} spacing={"3rem"}>
-        {lists.map((list) => (
-          <Grid item key={list.id}>
-            <TaskList
-              list={list}
-              tasks={tasks.filter((task) => task.listId === list.id)}
-              onChange={() => fetchData()}
-            />
-          </Grid>
-        ))}
+        {listsByBoardIdQuery.data?.map(
+          (list) =>
+            taskByBoardIdQuery.isSuccess && (
+              <Grid item key={list.id}>
+                <TaskList
+                  list={list}
+                  tasks={taskByBoardIdQuery.data.filter(
+                    (task) => task.listId === list.id
+                  )}
+                />
+              </Grid>
+            )
+        )}
       </Grid>
     </Grid>
   );

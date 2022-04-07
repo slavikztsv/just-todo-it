@@ -11,11 +11,11 @@ import { ITask } from "../../../models/interfaces/Task.interface";
 import Task from "../../Task/Task";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { ITaskList } from "../../../models/interfaces/TaskList.interface";
+import { PatchCollection } from "@reduxjs/toolkit/dist/query/core/buildThunks";
 
 interface IProps {
   list: ITaskList;
   tasks: ITask[];
-  onChange: () => void;
 }
 
 const TaskList = (props: IProps) => {
@@ -23,7 +23,6 @@ const TaskList = (props: IProps) => {
 
   const onTaskChangeHandler = () => {
     onCloseHandler();
-    props.onChange();
   };
 
   const onCloseHandler = () => {
@@ -37,7 +36,7 @@ const TaskList = (props: IProps) => {
         id={taskId}
         list={props.list}
         contextDataHandler={dialogCtx.setContextData}
-        onChange={onTaskChangeHandler}
+        isChanged={onTaskChangeHandler}
       />
     );
     dialogCtx.setTitle(`${props.list.name} - ${taskId ? "" : "New"} Task`);
